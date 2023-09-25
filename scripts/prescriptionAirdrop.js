@@ -62,17 +62,20 @@ async function fetchOwnerInfo(location) {
 }
 
 async function addOwnerAddress(array) {
-  const promises = array.map(async item => {
-    const res = await fetchOwnerInfo(item.location);
-    return {
-      ...item,
-      ownerAddress: res.data.item.owner,
-      paymail: res.data.item.paymail,
-    };
+  const promises = array.map(async (item, index) => {
+    return new Promise(async (resolve) => {
+      setTimeout(async () => {
+        const res = await fetchOwnerInfo(item.location);
+        resolve({
+          ...item,
+          ownerAddress: res.data.item.owner,
+          paymail: res.data.item.paymail,
+        });
+      }, index * 200);  // 200ms delay between each request
+    });
   });
 
-  const enrichedArray = await Promise.all(promises);
-  return enrichedArray;
+  return await Promise.all(promises);
 }
 
 const getItemsTxedAfterCutoff = async (blockHeight, perscList) => {
