@@ -30,8 +30,8 @@
         URL.revokeObjectURL(url);
 
         const url2 = URL.createObjectURL(new Blob([JSON.stringify(perscListAfterCutoff, null, 2)], { type: 'application/json' }));
-        const a2 = document.createElement('a2');
-        a2.href = url;
+        const a2 = document.createElement('a');
+        a2.href = url2;
         a2.download = 'perscListAfterCutoff.json';
         a2.click();
         URL.revokeObjectURL(url2);
