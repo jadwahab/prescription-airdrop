@@ -71,7 +71,7 @@ async function addOwnerAddress(array) {
           ownerAddress: res.data.item.owner,
           paymail: res.data.item.paymail,
         });
-      }, index * 200);  // 200ms delay between each request
+      }, index * 100);  // 200ms delay between each request
     });
   });
 
@@ -83,7 +83,8 @@ const getItemsTxedAfterCutoff = async (blockHeight, perscList) => {
   const results = [];
 
   for (let i = 0; i < perscList.length; i += chunkSize) {
-    console.log("calling woc api to check for txs after snapshot - at iteration " + i);
+    await sleep(50)
+    // console.log("calling woc api to check for txs after snapshot - at iteration " + i);
     const chunk = perscList.slice(i, i + chunkSize);
     const txids = chunk.map(item => item.txid);
 
