@@ -1,6 +1,5 @@
 const perscriptionAirdrop = (prescOwnerAddress, inscUTXO, inscPKWIF, fundingUTXO, fundingPKWIF) => {
   let bsvtx = bsv.Transaction();
-
   bsvtx.from([inscUTXO, fundingUTXO]) // add utxos as inputs to new tx
     // send inscription to prescription owner
     .to(prescOwnerAddress, 1)
@@ -36,15 +35,16 @@ const getPerscriptionList = async () => {
   try {
     const response = await fetch(prescAPIEndpoint);
     const perscData = await response.json();
-    // console.log(perscData);
+    console.log(perscData);
     const unorderedPerscList = perscData.data.items.map(item => ({
       propsNo: item.props.no,
       txid: item.txid,
-      location: item.location
+      location: item.location,
+      origin: item.origin,
+      ...(item.seller && { seller: item.seller })
     }));
-    // console.log(unorderedPerscList);
     const perscListWithoutOwners = unorderedPerscList.sort((a, b) => a.propsNo - b.propsNo);
-    // console.log(perscList);
+    console.log(perscListWithoutOwners);
 
     const perscList = await addOwnerAddress(perscListWithoutOwners);
     return perscList
@@ -71,7 +71,7 @@ async function addOwnerAddress(array) {
           ownerAddress: res.data.item.owner,
           paymail: res.data.item.paymail,
         });
-      }, index * 100);  // 200ms delay between each request
+      }, index * 150);  // 150ms delay between each request
     });
   });
 
@@ -83,7 +83,6 @@ const getItemsTxedAfterCutoff = async (blockHeight, perscList) => {
   const results = [];
 
   for (let i = 0; i < perscList.length; i += chunkSize) {
-    await sleep(50)
     // console.log("calling woc api to check for txs after snapshot - at iteration " + i);
     const chunk = perscList.slice(i, i + chunkSize);
     const txids = chunk.map(item => item.txid);
