@@ -1,17 +1,22 @@
 <html>
-    <script src="./scripts/bsv.browser.min.js"></script>
-    <script src="./scripts/prescriptionAirdrop.js"></script>
-    <script>    
-        const main = async() => {
+<script src="./scripts/bsv.browser.min.js"></script>
+<script src="./scripts/prescriptionAirdrop.js"></script>
+<script>
+    const main = async () => {
+        const percListFile = await readFile()
+        console.log(percListFile);
+        for (const persc in percListFile) {
             const res = await perscriptionAirdrop(
-                "17GgV1wYffKUugU6daDx7VE9yHXZggxW2y", // owner address
+                persc.ownerAddress,
                 "e027531de98a7ee6830a45d78e8f2ae873640342fab9190365fb0a27d57ac69a", // inscUTXO
                 "L2P1NEW5KpHj6kvtpAe784ojF2ayqDvoNzLnYWn9ncSj6L33hAf1", // inscWIF
                 "KwPVoki5qyur6JwotJkNXsEEENf46VmtHbMnLESatNoeVhZ1NEGp") // fundingWIF
 
             console.log(res)
         }
+    }
+</script>
+<input type="file" id="fileInput">
+<button onclick="main()">Read File</button>
 
-        main();
-    </script>
 </html>

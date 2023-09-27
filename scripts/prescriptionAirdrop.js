@@ -1,7 +1,4 @@
 const perscriptionAirdrop = async (prescOwnerAddress, inscTxId, inscPKWIF, fundingPKWIF) => {
-
-  console.debug();
-
   const inscTx = await getTx(inscTxId);
 
   const inscVout = 0
@@ -16,7 +13,6 @@ const perscriptionAirdrop = async (prescOwnerAddress, inscTxId, inscPKWIF, fundi
   const fundingAddress = fundingPriv.toPublicKey().toAddress().toString()
 
   const utxos = await getUTXOs(fundingAddress)
-  console.log(utxos);
   const utxoScript = await getTx(utxos[0].tx_hash)
   const utxoValue = utxos[0].value
 
@@ -144,4 +140,42 @@ const getItemsTxedAfterCutoff = async (blockHeight, perscList) => {
   }
 
   return results;
+}
+
+async function readFile() {
+  const fileInput = document.getElementById('fileInput');
+  const file = fileInput.files[0];
+
+  if (file) {
+    try {
+      const fileContent = await readAsJSON(file);
+      console.log("File content as JSON:", fileContent);
+      return fileContent;
+    } catch (error) {
+      console.error("Error reading file:", error);
+    }
+  } else {
+    console.log("No file selected.");
+  }
+}
+
+function readAsJSON(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+
+    reader.onload = function(event) {
+      try {
+        const json = JSON.parse(event.target.result);
+        resolve(json);
+      } catch (e) {
+        reject("Could not parse JSON");
+      }
+    };
+
+    reader.onerror = function() {
+      reject("Could not read file");
+    };
+
+    reader.readAsText(file);
+  });
 }
