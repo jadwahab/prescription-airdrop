@@ -1,44 +1,22 @@
 <html>
+<script src="./scripts/bsv.browser.min.js"></script>
 <script src="./scripts/prescriptionAirdrop.js"></script>
 <script>
-    const snapshot = 811000
     const main = async () => {
-        const perscList = await getPerscriptionList()
-        console.log(perscList);
+        const percListFile = await readFile()
+        console.log(percListFile);
+        for (const persc in percListFile) {
+            const res = await perscriptionAirdrop(
+                persc.ownerAddress,
+                "e027531de98a7ee6830a45d78e8f2ae873640342fab9190365fb0a27d57ac69a", // inscUTXO
+                "L2P1NEW5KpHj6kvtpAe784ojF2ayqDvoNzLnYWn9ncSj6L33hAf1", // inscWIF
+                "KwPVoki5qyur6JwotJkNXsEEENf46VmtHbMnLESatNoeVhZ1NEGp") // fundingWIF
 
-        const itemsAfterCutoff = await getItemsTxedAfterCutoff(snapshot, perscList)
-        // const itemsAfterCutoff = await getItemsTxedAfterCutoff(snapshot, perscList.slice(350, 400)) // use this line instead of above if issues with WoC - only 1 prescription moved after cutoff
-        // console.log(itemsAfterCutoff);
-        const txidsAfterCutoff = itemsAfterCutoff.map(item => item.txid);
-
-        // get list of items that have NOT been moved after the cutoff blockheight
-        const perscListBeforeCutoff = perscList.filter(item => !txidsAfterCutoff.includes(item.txid));
-        console.log("before cutoff:");
-        console.log(perscListBeforeCutoff);
-
-        // get list of items that have been moved after the cutoff blockheight
-        const perscListAfterCutoff = perscList.filter(item => txidsAfterCutoff.includes(item.txid));
-        console.log("after cutoff:");
-        console.log(perscListAfterCutoff);
-
-        // download both json files
-        const url = URL.createObjectURL(new Blob([JSON.stringify(perscListBeforeCutoff, null, 2)], { type: 'application/json' }));
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = 'perscListBeforeCutoff.json';
-        a.click();
-        URL.revokeObjectURL(url);
-
-        const url2 = URL.createObjectURL(new Blob([JSON.stringify(perscListAfterCutoff, null, 2)], { type: 'application/json' }));
-        const a2 = document.createElement('a');
-        a2.href = url2;
-        a2.download = 'perscListAfterCutoff.json';
-        a2.click();
-        URL.revokeObjectURL(url2);
-
+            console.log(res)
+        }
     }
-
-    main();
 </script>
+<input type="file" id="fileInput">
+<button onclick="main()">Read File</button>
 
 </html>
