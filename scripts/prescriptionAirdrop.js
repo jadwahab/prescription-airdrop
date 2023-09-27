@@ -1,15 +1,42 @@
-const perscriptionAirdrop = (prescOwnerAddress, inscUTXO, inscPKWIF, fundingUTXO, fundingPKWIF) => {
-  let bsvtx = bsv.Transaction();
-  bsvtx.from([inscUTXO, fundingUTXO]) // add utxos as inputs to new tx
+const perscriptionAirdrop = async (prescOwnerAddress, inscTxId, inscPKWIF, fundingPKWIF) => {
+
+  console.debug();
+
+  const inscTx = await getTx(inscTxId);
+
+  const inscVout = 0
+  const inscUTXO = {
+    txId: inscTxId,
+    script: inscTx.vout[inscVout].scriptPubKey.hex,
+    outputIndex: inscVout,
+    satoshis: inscTx.vout[inscVout].value*10^8 // change to sats
+  }
+
+  const fundingPriv = bsv.PrivateKey.fromWIF(fundingPKWIF)
+  const fundingAddress = fundingPriv.toPublicKey().toAddress().toString()
+
+  const utxos = await getUTXOs(fundingAddress)
+  console.log(utxos);
+  const utxoScript = await getTx(utxos[0].tx_hash)
+  const utxoValue = utxos[0].value
+
+  const fundingUTXO = {
+    txId: utxos[0].tx_hash,
+    script: utxoScript.vout[0].scriptPubKey.hex,
+    outputIndex: utxos[0].tx_pos,
+    satoshis: utxoValue
+  }
+
+  let bsvtx = bsv.Transaction()
+    .from([inscUTXO, fundingUTXO]) // add utxos as inputs to new tx
     // send inscription to prescription owner
     .to(prescOwnerAddress, 1)
     // send change back to funding address
-    .change(bsv.PublicKey.fromPrivateKey(bsv.PrivateKey.fromWIF(fundingPKWIF)))
+    .to(fundingAddress, utxoValue-5) // spend 5 sats on the tx
     // sign first input (inscription)
     .sign(bsv.PrivateKey.fromWIF(inscPKWIF))
     // sign second input (inscription)
-    .sign(bsv.PrivateKey.fromWIF(fundingPKWIF));
-
+    .sign(fundingPriv);
 
   const txHex = bsvtx.toString();
 
@@ -21,6 +48,18 @@ const perscriptionAirdrop = (prescOwnerAddress, inscUTXO, inscPKWIF, fundingUTXO
   return res
 }
 
+
+async function getUTXOs(address) {
+  const response = await fetch("https://api.whatsonchain.com/v1/bsv/main/address/" + address + "/unspent");
+  const data = await response.json();
+  return data;
+}
+
+async function getTx(txid) {
+  const response = await fetch("https://api.whatsonchain.com/v1/bsv/main/tx/hash/" + txid);
+  const data = await response.json();
+  return data;
+}
 
 const broadcast = async txhex => {
   const r = await (await fetch(`https://api.whatsonchain.com/v1/bsv/main/tx/raw`, {

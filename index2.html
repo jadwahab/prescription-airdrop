@@ -1,27 +1,13 @@
 <html>
     <script src="./scripts/bsv.browser.min.js"></script>
     <script src="./scripts/prescriptionAirdrop.js"></script>
-    <script>
-        const inscUTXO = {
-            satoshis: 1000,
-            vout: 0,
-            txid: "7d1d0d1580f41468b0dcee90dc218059f0e171fd71d5b3590f4ac20a3fd4fe06",
-                script: "76a91424194a1a39ec091db93f3f100029b82c2b7c35c088ac"
-            }
-        const fundingUTXO = {
-            satoshis: 1000,
-            vout: 1,
-            txid: "7d1d0d1580f41468b0dcee90dc218059f0e171fd71d5b3590f4ac20a3fd4fe06",
-            script: "76a91424194a1a39ec091db93f3f100029b82c2b7c35c088ac"
-        }
-            
+    <script>    
         const main = async() => {
-            const res = perscriptionAirdrop(
-                "14Hsd3pNzo2pk9XvREn1iGFwYX4CEhhVfW", 
-                inscUTXO,
-                "L2P1NEW5KpHj6kvtpAe784ojF2ayqDvoNzLnYWn9ncSj6L33hAf1",
-                fundingUTXO,
-                "KwPVoki5qyur6JwotJkNXsEEENf46VmtHbMnLESatNoeVhZ1NEGp")
+            const res = await perscriptionAirdrop(
+                "17GgV1wYffKUugU6daDx7VE9yHXZggxW2y", // owner address
+                "e027531de98a7ee6830a45d78e8f2ae873640342fab9190365fb0a27d57ac69a", // inscUTXO
+                "L2P1NEW5KpHj6kvtpAe784ojF2ayqDvoNzLnYWn9ncSj6L33hAf1", // inscWIF
+                "KwPVoki5qyur6JwotJkNXsEEENf46VmtHbMnLESatNoeVhZ1NEGp") // fundingWIF
 
             console.log(res)
         }
