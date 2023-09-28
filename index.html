@@ -34,6 +34,21 @@
 
         console.log("Successful List:", perscListSuccess);
         console.log("Remaining List:", perscList);
+
+        // download both json files
+        const url = URL.createObjectURL(new Blob([JSON.stringify(perscListSuccess, null, 2)], { type: 'application/json' }));
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'perscListSuccess.json';
+        a.click();
+        URL.revokeObjectURL(url);
+
+        const url2 = URL.createObjectURL(new Blob([JSON.stringify(perscList, null, 2)], { type: 'application/json' }));
+        const a2 = document.createElement('a');
+        a2.href = url2;
+        a2.download = 'perscList.json';
+        a2.click();
+        URL.revokeObjectURL(url2);
     }
 </script>
 <input type="file" id="fileInput">
