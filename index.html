@@ -2,18 +2,38 @@
 <script src="./scripts/bsv.browser.min.js"></script>
 <script src="./scripts/prescriptionAirdrop.js"></script>
 <script>
-    const main = async () => {
-        const percListFile = await readFile()
-        console.log(percListFile);
-        for (const persc in percListFile) {
-            const res = await perscriptionAirdrop(
-                persc.ownerAddress,
-                "e027531de98a7ee6830a45d78e8f2ae873640342fab9190365fb0a27d57ac69a", // inscUTXO
-                "L2P1NEW5KpHj6kvtpAe784ojF2ayqDvoNzLnYWn9ncSj6L33hAf1", // inscWIF
-                "KwPVoki5qyur6JwotJkNXsEEENf46VmtHbMnLESatNoeVhZ1NEGp") // fundingWIF
+    function delay(ms) {
+        return new Promise(resolve => setTimeout(resolve, ms));
+    }
+    async function main() {
+        let perscList = await readFile();
+        let perscListSuccess = [];
 
-            console.log(res)
+        for (const persc of perscList) {
+            try {
+                const res = await perscriptionAirdrop(
+                    persc.ownerAddress,
+                    "e027531de98a7ee6830a45d78e8f2ae873640342fab9190365fb0a27d57ac69a", // inscUTXO
+                    "L2P1NEW5KpHj6kvtpAe784ojF2ayqDvoNzLnYWn9ncSj6L33hAf1", // inscWIF
+                    "KwPVoki5qyur6JwotJkNXsEEENf46VmtHbMnLESatNoeVhZ1NEGp" // fundingWIF
+                );
+                perscListSuccess.push(persc);
+                console.log("Success airdropping:");
+                console.log(persc);
+                console.log(res);
+
+                await delay(100);
+
+            } catch (error) {
+                console.log(error);
+            }
         }
+
+        // Filter out the successful ones from the original array
+        perscList = perscList.filter((_, index) => !results[index]);
+
+        console.log("Successful List:", perscListSuccess);
+        console.log("Remaining List:", perscList);
     }
 </script>
 <input type="file" id="fileInput">

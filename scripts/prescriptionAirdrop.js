@@ -1,42 +1,51 @@
 const perscriptionAirdrop = async (prescOwnerAddress, inscTxId, inscPKWIF, fundingPKWIF) => {
-  const inscTx = await getTx(inscTxId);
+  try {
+    const inscTx = await getTx(inscTxId);
 
-  const inscVout = 0
-  const inscUTXO = {
-    txId: inscTxId,
-    script: inscTx.vout[inscVout].scriptPubKey.hex,
-    outputIndex: inscVout,
-    satoshis: inscTx.vout[inscVout].value*10^8 // change to sats
-  }
+    const inscVout = 0
+    const inscUTXO = {
+      txId: inscTxId,
+      script: inscTx.vout[inscVout].scriptPubKey.hex,
+      outputIndex: inscVout,
+      satoshis: inscTx.vout[inscVout].value * 10 ^ 8 // change to sats
+    }
 
-  const fundingPriv = bsv.PrivateKey.fromWIF(fundingPKWIF)
-  const fundingAddress = fundingPriv.toPublicKey().toAddress().toString()
+    const fundingPriv = bsv.PrivateKey.fromWIF(fundingPKWIF)
+    const fundingAddress = fundingPriv.toPublicKey().toAddress().toString()
 
-  const utxos = await getUTXOs(fundingAddress)
-  const utxoScript = await getTx(utxos[0].tx_hash)
-  const utxoValue = utxos[0].value
+    const utxos = await getUTXOs(fundingAddress)
+    const utxoScript = await getTx(utxos[0].tx_hash)
+    const utxoValue = utxos[0].value
 
-  const fundingUTXO = {
-    txId: utxos[0].tx_hash,
-    script: utxoScript.vout[0].scriptPubKey.hex,
-    outputIndex: utxos[0].tx_pos,
-    satoshis: utxoValue
-  }
+    const fundingUTXO = {
+      txId: utxos[0].tx_hash,
+      script: utxoScript.vout[0].scriptPubKey.hex,
+      outputIndex: utxos[0].tx_pos,
+      satoshis: utxoValue
+    }
 
-  let bsvtx = bsv.Transaction()
-    .from([inscUTXO, fundingUTXO]) // add utxos as inputs to new tx
-    // send inscription to prescription owner
-    .to(prescOwnerAddress, 1)
-    // send change back to funding address
-    .to(fundingAddress, utxoValue-5) // spend 5 sats on the tx
+    let bsvtx = bsv.Transaction()
+      .from([inscUTXO, fundingUTXO]) // add utxos as inputs to new tx
+      // send inscription to prescription owner
+      .to(prescOwnerAddress, 1)
+      // send change back to funding address
+      .to(fundingAddress, utxoValue - 5); // spend 5 sats on the tx
+
     // sign first input (inscription)
-    .sign(bsv.PrivateKey.fromWIF(inscPKWIF))
-    // sign second input (inscription)
-    .sign(fundingPriv);
+    bsvtx = signInput(bsvtx, inscUTXO, inscPKWIF, 0)
+    // .sign(bsv.PrivateKey.fromWIF(inscPKWIF))
 
-  const txHex = bsvtx.toString();
+    // sign second input (funding)
+    bsvtx = signInput(bsvtx, fundingUTXO, fundingPKWIF, 1)
+    // .sign(fundingPriv);
 
-  return txHex // return txhex before broadcasting until fully tested
+    const txHex = bsvtx.toString();
+
+    return txHex // return txhex before broadcasting until fully tested
+
+  } catch (error) {
+    throw error
+  }
 
   console.log(txHex);
   let res = broadcast(txHex);
@@ -44,6 +53,20 @@ const perscriptionAirdrop = async (prescOwnerAddress, inscTxId, inscPKWIF, fundi
   return res
 }
 
+const SIGHASH_ALL_FORKID = bsv.crypto.Signature.SIGHASH_ALL | bsv.crypto.Signature.SIGHASH_FORKID;
+
+const signInput = (bsvtx, utxo, pkWIF, idx) => {
+  const script = bsv.Script(utxo.script);
+  bsvtx.inputs[0].output = new bsv.Transaction.Output({ satoshis: utxo.satoshis, script: utxo.script });
+  const bsvPublicKey = getBSVPublicKey(pkWIF);
+  const sig = bsv.Transaction.sighash.sign(bsvtx, bsv.PrivateKey.fromWIF(pkWIF), SIGHASH_ALL_FORKID,
+    idx, script, new bsv.crypto.BN(utxo.satoshis));
+  const unlockingScript = bsv.Script.buildPublicKeyHashIn(bsvPublicKey, sig.toDER(), SIGHASH_ALL_FORKID);
+  bsvtx.inputs[idx].setScript(unlockingScript);
+  return bsvtx;
+}
+
+const getBSVPublicKey = pk => { return bsv.PublicKey.fromPrivateKey(bsv.PrivateKey.fromWIF(pk)) }
 
 async function getUTXOs(address) {
   const response = await fetch("https://api.whatsonchain.com/v1/bsv/main/address/" + address + "/unspent");
@@ -163,7 +186,7 @@ function readAsJSON(file) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
 
-    reader.onload = function(event) {
+    reader.onload = function (event) {
       try {
         const json = JSON.parse(event.target.result);
         resolve(json);
@@ -172,7 +195,7 @@ function readAsJSON(file) {
       }
     };
 
-    reader.onerror = function() {
+    reader.onerror = function () {
       reject("Could not read file");
     };
 
